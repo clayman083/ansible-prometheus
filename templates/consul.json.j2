@@ -67,7 +67,7 @@
         {
           "id": "cadvisor_exporter_check",
           "name": "Prometheus Docker exporter health check",
-          "http": "http://{{ prometheus_docker_exporter.host }}:{{ prometheus_docker_exporter.port }}",
+          "http": "http://{{ prometheus_docker_exporter.host }}:{{ prometheus_docker_exporter.port }}/metrics",
           "interval": "20s"
         }
       ]
@@ -89,7 +89,7 @@
         {
           "id": "prometheus_check",
           "name": "Prometheus server health check",
-          "http": "http://{{ prometheus.host }}:{{ prometheus.port }}",
+          "http": "http://{{ prometheus.host }}:{{ prometheus.port }}/-/healthy",
           "interval": "20s"
         }
       ]
