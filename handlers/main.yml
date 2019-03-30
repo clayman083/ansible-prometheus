@@ -1,0 +1,5 @@
+---
+
+- name: Update consul config
+  shell: docker kill -s HUP {{ prometheus_container.name }}
+  listen: "reload consul"

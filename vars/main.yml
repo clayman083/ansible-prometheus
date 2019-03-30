@@ -1,0 +1,82 @@
+---
+
+prometheus_dir: "{{ services_dir }}/prometheus"
+prometheus_rules_dir: "{{ prometheus_dir }}/rules.d"
+
+
+# Prometheus settings
+prometheus_container:
+  image: prom/prometheus:v2.2.1
+  name: prometheus
+  dns: "{{ private_network.address }}"
+  network: "{{ prometheus_network.name }}"
+  restart: always
+
+
+# Node exporter settings
+prometheus_node_exporter:
+  enabled: yes
+
+  host: "{{ private_network.address }}"
+  port: 9100
+
+prometheus_node_exporter_container:
+  image: prom/node-exporter:latest
+  name: node_exporter
+  dns: "{{ private_network.address }}"
+  network: "{{ prometheus_network.name }}"
+  restart: always
+
+prometheus_node_exporter_service:
+  name: node-exporter
+  tags:
+    - "{{ env }}"
+  meta:
+    hostname: "{{ ansible_hostname }}"
+    tier: "{{ env }}"
+
+
+# Cadvisor exporter settings
+prometheus_cadvisor_exporter:
+  enabled: yes
+
+  host: "{{ private_network.address }}"
+  port: 8080
+
+prometheus_cadvisor_exporter_container:
+  image: google/cadvisor:latest
+  name: cadvisor_exporter
+  dns: "{{ private_network.address }}"
+  network: "{{ prometheus_network.name }}"
+  restart: always
+
+prometheus_cadvisor_exporter_service:
+  name: cadvisor-exporter
+  tags:
+    - "{{ env }}"
+  meta:
+    hostname: "{{ ansible_hostname }}"
+    tier: "{{ env }}"
+
+
+# Alertmanager settings
+prometheus_alertmanager:
+  enabled: no
+
+  host: "{{ private_network.address }}"
+  port: 9093
+
+prometheus_alertmanager_service:
+  name: alertmanager
+  tags:
+    - "{{ env }}"
+  meta:
+    hostname: "{{ ansible_hostname }}"
+    tier: "{{ env }}"
+
+prometheus_alertmanager_container:
+  name: alertmanager
+  image: prom/alertmanager:v0.15.1
+  dns: "{{ private_network.address }}"
+  network: "{{ prometheus_network.name }}"
+  restart: always

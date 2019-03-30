@@ -1,0 +1,44 @@
+---
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+  external_labels:
+    monitor: 'prometheus'
+
+
+rule_files:
+  - "/etc/prometheus/rules.d/node.rules.yml"
+
+{% if prometheus_alertmanager.enabled %}
+alerting:
+  alertmanagers:
+    - scheme: http
+      static_configs:
+        - targets:
+          - 'alertmanager.service.consul:9093'
+{% endif %}
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+{% if prometheus_exporters %}
+  - job_name: 'exporters'
+    consul_sd_configs:
+      - server: 'consul.service.consul:8500'
+        services: [{% for service in prometheus_exporters %}'{{ service }}'{% if not loop.last %}, {% endif %}{% endfor %}]
+    relabel_configs:
+      - source_labels: [__meta_consul_service]
+        target_label: exporter
+{% endif %}
+
+{% if prometheus_services %}
+  - job_name: 'apps'
+    metrics_path: /-/metrics
+    consul_sd_configs:
+      - server: 'consul.service.consul:8500'
+        services: [{% for service in prometheus_services %}'{{ service }}'{% if not loop.last %}, {% endif %}{% endfor %}]
+{% endif %}

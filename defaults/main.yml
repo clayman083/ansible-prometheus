@@ -1,0 +1,94 @@
+---
+
+# Prometheus settings
+prometheus_network:
+  name: backend
+  subnet: 10.8.0.0/16
+
+prometheus:
+  host: "{{ private_network.address }}"
+  port: 9090
+
+prometheus_server: no
+
+prometheus_storage_retention: 30d
+
+prometheus_service:
+  name: prometheus
+  tags:
+    - "{{ env }}"
+  meta:
+    hostname: "{{ ansible_hostname }}"
+    tier: "{{ env }}"
+
+prometheus_exporters: []
+
+prometheus_services: []
+
+
+# Node exporter settings
+prometheus_node_exporter:
+  enabled: yes
+
+  host: "{{ private_network.address }}"
+  port: 9100
+
+prometheus_node_exporter_service:
+  name: node-exporter
+  tags:
+    - "{{ env }}"
+  meta:
+    hostname: "{{ ansible_hostname }}"
+    tier: "{{ env }}"
+
+
+# Cadvisor exporter settings
+prometheus_cadvisor_exporter:
+  enabled: yes
+
+  host: "{{ private_network.address }}"
+  port: 8080
+
+prometheus_cadvisor_service:
+  name: cadvisor-exporter
+  tags:
+    - "{{ env }}"
+  meta:
+    hostname: "{{ ansible_hostname }}"
+    tier: "{{ env }}"
+
+
+# Docker exporter settings
+prometheus_docker_exporter:
+  host: "{{ private_network.address }}"
+  port: 9323
+
+prometheus_docker_exporter_service:
+  name: docker-exporter
+  tags:
+    - "{{ env }}"
+  meta:
+    hostname: "{{ ansible_hostname }}"
+    tier: "{{ env }}"
+
+
+# Alertmanager settings
+prometheus_alertmanager:
+  enabled: no
+
+  host: "{{ private_network.address }}"
+  port: 9093
+
+prometheus_alertmanager_service:
+  name: alertmanager
+  tags:
+    - "{{ env }}"
+  meta:
+    hostname: "{{ ansible_hostname }}"
+    tier: "{{ env }}"
+
+prometheus_alertmanager_slack:
+  enabled: no
+  api_url: ''
+  channel: 'general'
+  username: 'Prometheus'

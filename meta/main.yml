@@ -1,0 +1,12 @@
+galaxy_info:
+  author: Kirill Sumorokov
+  description: Configure Prometheus for monitoring.
+
+  license: MIT
+
+  min_ansible_version: 2.7
+
+  galaxy_tags: ['prometheus']
+
+  dependencies:
+    - consul
