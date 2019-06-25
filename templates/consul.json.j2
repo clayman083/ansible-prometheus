@@ -1,85 +1,85 @@
 {
   "services": [
     {
-      "name": "{{ prometheus_node_exporter_service.name }}",
-{% if prometheus_node_exporter_service.tags %}
-      "tags": ["{{ prometheus_node_exporter_service.tags|join('", "') }}"],
+      "name": "{{ prometheus.node_exporter.service.name }}",
+{% if prometheus.node_exporter.service.tags %}
+      "tags": ["{{ prometheus.node_exporter.service.tags|join('", "') }}"],
 {% endif %}
-{% if prometheus_node_exporter_service.meta %}
+{% if prometheus.node_exporter.service.meta %}
       "meta": {
-{% for key, value in prometheus_node_exporter_service.meta.items() %}
+{% for key, value in prometheus.node_exporter.service.meta.items() %}
         "{{ key }}": "{{ value }}"{% if not loop.last %},{% endif %}
 
 {% endfor %}
       },
 {% endif %}
-      "address": "{{ prometheus_node_exporter.host }}",
-      "port": {{ prometheus_node_exporter.port }},
+      "address": "{{ prometheus.node_exporter.host }}",
+      "port": {{ prometheus.node_exporter.port }},
       "checks": [
         {
           "id": "node_exporter_check",
           "name": "Prometheus node exporter health check",
-          "http": "http://{{ prometheus_node_exporter.host }}:{{ prometheus_node_exporter.port }}",
+          "http": "http://{{ prometheus.node_exporter.host }}:{{ prometheus.node_exporter.port }}",
           "interval": "20s"
         }
       ]
     },
     {
-      "name": "{{ prometheus_cadvisor_exporter_service.name }}",
-{% if prometheus_cadvisor_exporter_service.tags %}
-      "tags": ["{{ prometheus_cadvisor_exporter_service.tags|join('", "') }}"],
+      "name": "{{ prometheus.cadvisor_exporter.service.name }}",
+{% if prometheus.cadvisor_exporter.service.tags %}
+      "tags": ["{{ prometheus.cadvisor_exporter.service.tags|join('", "') }}"],
 {% endif %}
-{% if prometheus_cadvisor_exporter_service.meta %}
+{% if prometheus.cadvisor_exporter.service.meta %}
       "meta": {
-{% for key, value in prometheus_cadvisor_exporter_service.meta.items() %}
+{% for key, value in prometheus.cadvisor_exporter.service.meta.items() %}
         "{{ key }}": "{{ value }}"{% if not loop.last %},{% endif %}
 
 {% endfor %}
       },
 {% endif %}
-      "address": "{{ prometheus_cadvisor_exporter.host }}",
-      "port": {{ prometheus_cadvisor_exporter.port }},
+      "address": "{{ prometheus.cadvisor_exporter.host }}",
+      "port": {{ prometheus.cadvisor_exporter.port }},
       "checks": [
         {
           "id": "cadvisor_exporter_check",
           "name": "Prometheus cAdvisor exporter health check",
-          "http": "http://{{ prometheus_cadvisor_exporter.host }}:{{ prometheus_cadvisor_exporter.port }}",
+          "http": "http://{{ prometheus.cadvisor_exporter.host }}:{{ prometheus.cadvisor_exporter.port }}",
           "interval": "20s"
         }
       ]
     },
     {
-      "name": "{{ prometheus_docker_exporter_service.name }}",
-{% if prometheus_docker_exporter_service.tags %}
-      "tags": ["{{ prometheus_docker_exporter_service.tags|join('", "') }}"],
+      "name": "{{ prometheus.docker_exporter.service.name }}",
+{% if prometheus.docker_exporter.service.tags %}
+      "tags": ["{{ prometheus.docker_exporter.service.tags|join('", "') }}"],
 {% endif %}
-{% if prometheus_docker_exporter_service.meta %}
+{% if prometheus.docker_exporter.service.meta %}
       "meta": {
-{% for key, value in prometheus_docker_exporter_service.meta.items() %}
+{% for key, value in prometheus.docker_exporter.service.meta.items() %}
         "{{ key }}": "{{ value }}"{% if not loop.last %},{% endif %}
 
 {% endfor %}
       },
 {% endif %}
-      "address": "{{ prometheus_docker_exporter.host }}",
-      "port": {{ prometheus_docker_exporter.port }},
+      "address": "{{ prometheus.docker_exporter.host }}",
+      "port": {{ prometheus.docker_exporter.port }},
       "checks": [
         {
-          "id": "cadvisor_exporter_check",
+          "id": "docker_exporter_check",
           "name": "Prometheus Docker exporter health check",
-          "http": "http://{{ prometheus_docker_exporter.host }}:{{ prometheus_docker_exporter.port }}/metrics",
+          "http": "http://{{ prometheus.docker_exporter.host }}:{{ prometheus.docker_exporter.port }}/metrics",
           "interval": "20s"
         }
       ]
-{% if prometheus_server %}
+{% if prometheus.server.enabled|default(False) %}
     },
     {
-      "name": "{{ prometheus_service.name }}",
-      "address": "{{ prometheus.host }}",
-      "port": {{ prometheus.port }},
-{% if prometheus_service.meta %}
+      "name": "{{ prometheus.server.service.name }}",
+      "address": "{{ prometheus.server.host }}",
+      "port": {{ prometheus.server.port }},
+{% if prometheus.server.service.meta %}
       "meta": {
-{% for key, value in prometheus_service.meta.items() %}
+{% for key, value in prometheus.server.service.meta.items() %}
         "{{ key }}": "{{ value }}"{% if not loop.last %},{% endif %}
 
 {% endfor %}
@@ -87,21 +87,21 @@
 {% endif %}
       "checks": [
         {
-          "id": "prometheus_check",
+          "id": "prometheus_server_check",
           "name": "Prometheus server health check",
-          "http": "http://{{ prometheus.host }}:{{ prometheus.port }}/-/healthy",
+          "http": "http://{{ prometheus.server.host }}:{{ prometheus.server.port }}/-/healthy",
           "interval": "20s"
         }
       ]
-{% if prometheus_alertmanager.enabled %}
+{% if prometheus.alertmanager.enabled|default(False) %}
     },
     {
-      "name": "{{ prometheus_alertmanager_service.name }}",
-      "address": "{{ prometheus_alertmanager.host }}",
-      "port": {{ prometheus_alertmanager.port }},
-{% if prometheus_alertmanager_service.meta %}
+      "name": "{{ prometheus.alertmanager.service.name }}",
+      "address": "{{ prometheus.alertmanager.host }}",
+      "port": {{ prometheus.alertmanager.port }},
+{% if prometheus.alertmanager.service.meta %}
       "meta": {
-{% for key, value in prometheus_alertmanager_service.meta.items() %}
+{% for key, value in prometheus.alertmanager.service.meta.items() %}
         "{{ key }}": "{{ value }}"{% if not loop.last %},{% endif %}
 
 {% endfor %}
@@ -111,7 +111,7 @@
         {
           "id": "alertmanager_check",
           "name": "Prometheus alert manager health check",
-          "http": "http://{{ prometheus_alertmanager.host }}:{{ prometheus_alertmanager.port }}",
+          "http": "http://{{ prometheus.alertmanager.host }}:{{ prometheus.alertmanager.port }}",
           "interval": "20s"
         }
       ]

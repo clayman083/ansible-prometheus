@@ -1,0 +1,31 @@
+---
+
+groups:
+  - name: consul
+    rules:
+      - alert: consul_server_is_down
+        expr: consul_up == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Consul server is down"
+          description: "Consul server is down. Reported by instance {{ $labels.instance }} of job {{ $labels.job }}."
+
+      - alert: service_health_check
+        expr: consul_catalog_service_node_healthy == 0
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Service healthcheck failed"
+          description: "Service `{{ $labels.service_name }}` health check failed. Reported by instance {{ $labels.node }} of job {{ $labels.job }}."
+
+      - alert: consul_master_node_disappear
+        expr: consul_raft_peers < number_of_consul_master
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Consul master node disappear"
+          description: "Numbers of consul raft peers less then expected <https://example.ru/ui/{{ $labels.dc }}/services/consul|Consul masters>\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"

@@ -1,94 +1,132 @@
 ---
 
-# Prometheus settings
-prometheus_network:
-  name: backend
-  subnet: 10.8.0.0/16
-
 prometheus:
-  host: "{{ private_network.address }}"
-  port: 9090
+  dir: "{{ services_dir }}/prometheus"
+  rules_dir: "{{ services_dir }}/prometheus/rules.d"
 
-prometheus_server: no
+  node_exporter:
+    host: "{{ private_network.address }}"
+    port: 9100
 
-prometheus_storage_retention: 30d
+    container:
+      image: prom/node-exporter:latest
+      name: node_exporter
+      dns: "{{ private_network.address }}"
+      network: ""
+      restart: always
 
-prometheus_service:
-  name: prometheus
-  tags:
-    - "{{ env }}"
-  meta:
-    hostname: "{{ ansible_hostname }}"
-    tier: "{{ env }}"
+      syslog:
+        enabled: no
+        host: unixgram:///dev/log
+        tag: node_exporter
 
-prometheus_exporters: []
+    service:
+      name: node-exporter
+      tags:
+        - "{{ env }}"
+      meta:
+        hostname: "{{ ansible_hostname }}"
+        tier: "{{ env }}"
 
-prometheus_services: []
+  cadvisor_exporter:
+    host: "{{ private_network.address }}"
+    port: 8080
 
+    container:
+      image: google/cadvisor:latest
+      name: cadvisor_exporter
+      dns: "{{ private_network.address }}"
+      network: ""
+      restart: always
 
-# Node exporter settings
-prometheus_node_exporter:
-  enabled: yes
+      syslog:
+        enabled: no
+        host: unixgram:///dev/log
+        tag: cadvisor_exporter
 
-  host: "{{ private_network.address }}"
-  port: 9100
+    service:
+      name: cadvisor-exporter
+      tags:
+        - "{{ env }}"
+      meta:
+        hostname: "{{ ansible_hostname }}"
+        tier: "{{ env }}"
 
-prometheus_node_exporter_service:
-  name: node-exporter
-  tags:
-    - "{{ env }}"
-  meta:
-    hostname: "{{ ansible_hostname }}"
-    tier: "{{ env }}"
+  docker_exporter:
+    host: "{{ private_network.address }}"
+    port: 9323
 
+    service:
+      name: docker-exporter
+      tags:
+        - "{{ env }}"
+      meta:
+        hostname: "{{ ansible_hostname }}"
+        tier: "{{ env }}"
 
-# Cadvisor exporter settings
-prometheus_cadvisor_exporter:
-  enabled: yes
+  server:
+    enabled: no
 
-  host: "{{ private_network.address }}"
-  port: 8080
+    host: "{{ private_network.address }}"
+    port: 9090
 
-prometheus_cadvisor_service:
-  name: cadvisor-exporter
-  tags:
-    - "{{ env }}"
-  meta:
-    hostname: "{{ ansible_hostname }}"
-    tier: "{{ env }}"
+    storage_retention: 30d
 
+    exporters: []
 
-# Docker exporter settings
-prometheus_docker_exporter:
-  host: "{{ private_network.address }}"
-  port: 9323
+    services: []
 
-prometheus_docker_exporter_service:
-  name: docker-exporter
-  tags:
-    - "{{ env }}"
-  meta:
-    hostname: "{{ ansible_hostname }}"
-    tier: "{{ env }}"
+    rules:
+      - node.rules.yml
 
+    container:
+      image: prom/prometheus:v2.2.1
+      name: prometheus
+      dns: "{{ private_network.address }}"
+      network: ""
+      restart: always
 
-# Alertmanager settings
-prometheus_alertmanager:
-  enabled: no
+      syslog:
+        enabled: no
+        host: unixgram:///dev/log
+        tag: prometheus
 
-  host: "{{ private_network.address }}"
-  port: 9093
+    service:
+      name: prometheus
+      tags:
+        - "{{ env }}"
+      meta:
+        hostname: "{{ ansible_hostname }}"
+        tier: "{{ env }}"
 
-prometheus_alertmanager_service:
-  name: alertmanager
-  tags:
-    - "{{ env }}"
-  meta:
-    hostname: "{{ ansible_hostname }}"
-    tier: "{{ env }}"
+  alertmanager:
+    enabled: no
 
-prometheus_alertmanager_slack:
-  enabled: no
-  api_url: ''
-  channel: 'general'
-  username: 'Prometheus'
+    host: "{{ private_network.address }}"
+    port: 9093
+
+    container:
+      name: alertmanager
+      image: prom/alertmanager:v0.15.1
+      dns: "{{ private_network.address }}"
+      network: ""
+      restart: always
+
+      syslog:
+        enabled: no
+        host: unixgram:///dev/log
+        tag: alertmanager
+
+    slack:
+      enabled: no
+      api_url: ''
+      channel: 'general'
+      username: 'Prometheus'
+
+    service:
+      name: alertmanager
+      tags:
+        - "{{ env }}"
+      meta:
+        hostname: "{{ ansible_hostname }}"
+        tier: "{{ env }}"

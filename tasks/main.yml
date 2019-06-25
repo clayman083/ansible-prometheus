@@ -1,5 +1,10 @@
 ---
 
-- import_tasks: docker.yml
+- import_tasks: exporters.yml
+  tags:
+    - prometheus
+
+- import_tasks: server.yml
+  when: prometheus.server.enabled|default(False)
   tags:
     - prometheus

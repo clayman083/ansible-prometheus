@@ -2,92 +2,102 @@
 
 version: '3.5'
 
+{% if prometheus.network|default(False) %}
 networks:
-  {{ prometheus_network.name }}:
+  {{ prometheus.network.name }}:
     external: true
+{% endif %}
 
+{% if prometheus.server.enabled %}
 volumes:
   prometheus_data:
-{% if prometheus_alertmanager.enabled %}
+{% if prometheus.alertmanager.enabled %}
   alertmanager_data:
+{% endif %}
 {% endif %}
 
 services:
   node_exporter:
-    container_name: {{ prometheus_node_exporter_container.name }}
-    image: {{ prometheus_node_exporter_container.image }}
-    dns: {{ prometheus_node_exporter_container.dns }}
+    container_name: {{ prometheus.node_exporter.container.name }}
+    image: {{ prometheus.node_exporter.container.image }}
+    dns: {{ prometheus.node_exporter.container.dns }}
     hostname: {% raw %}"{{.Node.Hostname}}"{% endraw %}
 
     environment:
       - NODE_ID={% raw %}{{.Node.ID}}{% endraw %}
 
-{% if env != 'local' %}
+{% if prometheus.node_exporter.container.syslog.enabled %}
     logging:
       driver: syslog
       options:
-        syslog-address: "unixgram:///dev/log"
-        tag: node_exporter
+        syslog-address: "{{ prometheus.node_exporter.container.syslog.host }}"
+        tag: {{ prometheus.node_exporter.container.syslog.tag }}
 {% endif %}
+{% if prometheus.network|default(False) %}
     networks:
-      - {{ prometheus_network.name }}
+      - {{ prometheus.network.name }}
+{% endif %}
     ports:
-      - {{ prometheus_node_exporter.host }}:{{ prometheus_node_exporter.port }}:9100
-    restart: {{ prometheus_node_exporter_container.restart }}
+      - {{ prometheus.node_exporter.host }}:{{ prometheus.node_exporter.port }}:9100
+    restart: {{ prometheus.node_exporter.container.restart }}
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /:/rootfs:ro
 
   cadvisor_exporter:
-    container_name: {{ prometheus_cadvisor_exporter_container.name }}
-    image: {{ prometheus_cadvisor_exporter_container.image }}
+    container_name: {{ prometheus.cadvisor_exporter.container.name }}
+    image: {{ prometheus.cadvisor_exporter.container.image }}
     command: -logtostderr -docker_only
-    dns: {{ prometheus_cadvisor_exporter_container.dns }}
-{% if env != 'local' %}
+    dns: {{ prometheus.cadvisor_exporter.container.dns }}
+{% if prometheus.cadvisor_exporter.container.syslog.enabled %}
     logging:
       driver: syslog
       options:
-        syslog-address: "unixgram:///dev/log"
-        tag: cadvisor_exporter
+        syslog-address: "{{ prometheus.cadvisor_exporter.container.syslog.host }}"
+        tag: {{ prometheus.cadvisor_exporter.container.syslog.tag }}
 {% endif %}
+{% if prometheus.network|default(False) %}
     networks:
-      - {{ prometheus_network.name }}
+      - {{ prometheus.network.name }}
+{% endif %}
     ports:
-      - {{ prometheus_cadvisor_exporter.host }}:{{ prometheus_cadvisor_exporter.port }}:8080
-    restart: {{ prometheus_cadvisor_exporter_container.restart }}
+      - {{ prometheus.cadvisor_exporter.host }}:{{ prometheus.cadvisor_exporter.port }}:8080
+    restart: {{ prometheus.cadvisor_exporter.container.restart }}
     volumes:
       - "/:/rootfs:ro"
       - "/var/run:/var/run:rw"
       - "/sys:/sys:ro"
       - "/var/lib/docker/:/var/lib/docker:ro"
 
-{% if prometheus_server %}
+{% if prometheus.server.enabled|default(False) %}
   prometheus:
-    container_name: {{ prometheus_container.name }}
-    image: {{ prometheus_container.image }}
+    container_name: {{ prometheus.server.container.name }}
+    image: {{ prometheus.server.container.image }}
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention={{ prometheus_storage_retention }}'
-    dns: {{ prometheus_container.dns }}
-{% if env != 'local' %}
+      - '--storage.tsdb.retention={{ prometheus.server.storage_retention }}'
+    dns: {{ prometheus.server.container.dns }}
+{% if prometheus.server.container.syslog.enabled %}
     logging:
       driver: syslog
       options:
-        syslog-address: "unixgram:///dev/log"
-        tag: prometheus
+        syslog-address: "{{ prometheus.server.container.syslog.host }}"
+        tag: {{ prometheus.server.container.syslog.tag }}
 {% endif %}
+{% if prometheus.network|default(False) %}
     networks:
-      - {{ prometheus_network.name }}
+      - {{ prometheus.network.name }}
+{% endif %}
     ports:
-      - {{ prometheus.host }}:{{ prometheus.port }}:9090
-    restart: {{ prometheus_container.restart }}
+      - {{ prometheus.server.host }}:{{ prometheus.server.port }}:9090
+    restart: {{ prometheus.server.container.restart }}
     volumes:
       - ./:/etc/prometheus
       - prometheus_data:/prometheus
 
-{% if prometheus_alertmanager.enabled %}
+{% if prometheus.alertmanager.enabled %}
   alertmanager:
     container_name: {{ prometheus_alertmanager_container.name }}
     image: {{ prometheus_alertmanager_container.image }}
@@ -95,18 +105,20 @@ services:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'
     dns: {{ prometheus_alertmanager_container.dns }}
-{% if env != 'local' %}
+{% if prometheus.alertmanager.container.syslog.enabled %}
     logging:
       driver: syslog
       options:
-        syslog-address: "unixgram:///dev/log"
-        tag: alertmanager
+        syslog-address: "{{ prometheus.alertmanager.container.syslog.host }}"
+        tag: {{ prometheus.alertmanager.container.syslog.tag }}
 {% endif %}
+{% if prometheus.network|default(False) %}
     networks:
-      - {{ prometheus_network.name }}
+      - {{ prometheus.network.name }}
+{% endif %}
     ports:
-      - {{ prometheus_alertmanager.host }}:{{ prometheus_alertmanager.port }}:9093
-    restart: {{ prometheus_container.restart }}
+      - {{ prometheus.alertmanager.host }}:{{ prometheus.alertmanager.port }}:9093
+    restart: {{ prometheus.container.restart }}
     volumes:
       - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
       - alertmanager_data:/alertmanager

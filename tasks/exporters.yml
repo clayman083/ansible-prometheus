@@ -1,0 +1,13 @@
+---
+
+- name: Prepare folders
+  file: path={{ item }} state=directory
+  with_items:
+    - "{{ prometheus.dir }}"
+
+- name: Assemble config files
+  template: src={{ item.src }}.j2 dest={{ item.dest }}
+  with_items:
+    - src: docker-compose.yml
+      dest: "{{ prometheus.dir }}/docker-compose.yml"
+  notify: restart prometheus
