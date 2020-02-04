@@ -1,5 +1,0 @@
-#!/bin/sh
-
-exec consul-template \
-     -consul-addr "{{ discovery.host }}:{{ discovery.port }}" \
-     -template "/etc/consul-templates/prometheus.conf:/etc/nginx/conf.d/prometheus.conf:sv hup nginx"

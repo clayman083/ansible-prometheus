@@ -20,14 +20,6 @@ prometheus:
         host: unixgram:///dev/log
         tag: node_exporter
 
-    service:
-      name: node-exporter
-      tags:
-        - "{{ env }}"
-      meta:
-        hostname: "{{ ansible_hostname }}"
-        tier: "{{ env }}"
-
   cadvisor_exporter:
     host: "{{ private_network.address }}"
     port: 8080
@@ -44,25 +36,9 @@ prometheus:
         host: unixgram:///dev/log
         tag: cadvisor_exporter
 
-    service:
-      name: cadvisor-exporter
-      tags:
-        - "{{ env }}"
-      meta:
-        hostname: "{{ ansible_hostname }}"
-        tier: "{{ env }}"
-
   docker_exporter:
     host: "{{ private_network.address }}"
     port: 9323
-
-    service:
-      name: docker-exporter
-      tags:
-        - "{{ env }}"
-      meta:
-        hostname: "{{ ansible_hostname }}"
-        tier: "{{ env }}"
 
   server:
     enabled: no
@@ -91,14 +67,6 @@ prometheus:
         host: unixgram:///dev/log
         tag: prometheus
 
-    service:
-      name: prometheus
-      tags:
-        - "{{ env }}"
-      meta:
-        hostname: "{{ ansible_hostname }}"
-        tier: "{{ env }}"
-
   alertmanager:
     enabled: no
 
@@ -122,11 +90,3 @@ prometheus:
       api_url: ''
       channel: 'general'
       username: 'Prometheus'
-
-    service:
-      name: alertmanager
-      tags:
-        - "{{ env }}"
-      meta:
-        hostname: "{{ ansible_hostname }}"
-        tier: "{{ env }}"
