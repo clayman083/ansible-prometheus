@@ -2,10 +2,36 @@
 
 version: '3.5'
 
-{% if prometheus.network|default(False) %}
+{% if prometheus.server.container.networks or prometheus.blackbox_exporter.container.networks or prometheus.node_exporter.container.networks or prometheus.cadvisor_exporter.container.networks or prometheus.alertmanager.container.networks %}
 networks:
-  {{ prometheus.network.name }}:
+{% for network in prometheus.server.container.networks|default([]) %}
+  {{ network.name }}:
     external: true
+{% endfor %}
+{% for network in prometheus.blackbox_exporter.container.networks %}
+{% if network not in prometheus.blackbox_exporter.container.networks|default([]) %}
+  {{ network.name }}:
+    external: true
+{% endif %}
+{% endfor %}
+{% for network in prometheus.node_exporter.container.networks %}
+{% if network not in prometheus.node_exporter.container.networks|default([]) %}
+  {{ network.name }}:
+    external: true
+{% endif %}
+{% endfor %}
+{% for network in prometheus.cadvisor_exporter.container.networks %}
+{% if network not in prometheus.cadvisor_exporter.container.networks|default([]) %}
+  {{ network.name }}:
+    external: true
+{% endif %}
+{% endfor %}
+{% for network in prometheus.alertmanager.container.networks %}
+{% if network not in prometheus.alertmanager.container.networks|default([]) %}
+  {{ network.name }}:
+    external: true
+{% endif %}
+{% endfor %}
 {% endif %}
 
 {% if prometheus.server.enabled %}
@@ -20,12 +46,20 @@ services:
   node_exporter:
     container_name: {{ prometheus.node_exporter.container.name }}
     image: {{ prometheus.node_exporter.container.image }}
+{% if prometheus.node_exporter.container.dns|default(false) %}
     dns: {{ prometheus.node_exporter.container.dns }}
+{% endif %}
     hostname: {% raw %}"{{.Node.Hostname}}"{% endraw %}
 
     environment:
       - NODE_ID={% raw %}{{.Node.ID}}{% endraw %}
 
+{% if prometheus.node_exporter.container.labels %}
+    labels:
+{% for label in prometheus.node_exporter.container.labels|default([]) %}
+      - {{ label }}
+{% endfor %}
+{% endif %}
 {% if prometheus.node_exporter.container.syslog.enabled %}
     logging:
       driver: syslog
@@ -33,9 +67,11 @@ services:
         syslog-address: "{{ prometheus.node_exporter.container.syslog.host }}"
         tag: {{ prometheus.node_exporter.container.syslog.tag }}
 {% endif %}
-{% if prometheus.network|default(False) %}
+{% if prometheus.node_exporter.container.networks %}
     networks:
-      - {{ prometheus.network.name }}
+{% for network in prometheus.node_exporter.container.networks %}
+      - {{ network.name }}
+{% endfor %}
 {% endif %}
     ports:
       - {{ prometheus.node_exporter.host }}:{{ prometheus.node_exporter.port }}:9100
@@ -49,7 +85,15 @@ services:
     container_name: {{ prometheus.cadvisor_exporter.container.name }}
     image: {{ prometheus.cadvisor_exporter.container.image }}
     command: -logtostderr -docker_only
+{% if prometheus.cadvisor_exporter.container.dns|default(false) %}
     dns: {{ prometheus.cadvisor_exporter.container.dns }}
+{% endif %}
+{% if prometheus.cadvisor_exporter.container.labels %}
+    labels:
+{% for label in prometheus.cadvisor_exporter.container.labels|default([]) %}
+      - {{ label }}
+{% endfor %}
+{% endif %}
 {% if prometheus.cadvisor_exporter.container.syslog.enabled %}
     logging:
       driver: syslog
@@ -57,9 +101,11 @@ services:
         syslog-address: "{{ prometheus.cadvisor_exporter.container.syslog.host }}"
         tag: {{ prometheus.cadvisor_exporter.container.syslog.tag }}
 {% endif %}
-{% if prometheus.network|default(False) %}
+{% if prometheus.cadvisor_exporter.container.networks %}
     networks:
-      - {{ prometheus.network.name }}
+{% for network in prometheus.cadvisor_exporter.container.networks %}
+      - {{ network.name }}
+{% endfor %}
 {% endif %}
     ports:
       - {{ prometheus.cadvisor_exporter.host }}:{{ prometheus.cadvisor_exporter.port }}:8080
@@ -70,6 +116,40 @@ services:
       - "/sys:/sys:ro"
       - "/var/lib/docker/:/var/lib/docker:ro"
 
+{% if prometheus.blackbox_exporter.enabled|default(False) %}
+  blackbox_exporter:
+    container_name: {{ prometheus.blackbox_exporter.container.name }}
+    image: {{ prometheus.blackbox_exporter.container.image }}
+    command: '--config.file=/config/blackbox.yml'
+{% if prometheus.blackbox_exporter.container.dns|default(false) %}
+    dns: {{ prometheus.blackbox_exporter.container.dns }}
+{% endif %}
+{% if prometheus.blackbox_exporter.container.labels %}
+    labels:
+{% for label in prometheus.blackbox_exporter.container.labels|default([]) %}
+      - {{ label }}
+{% endfor %}
+{% endif %}
+{% if prometheus.blackbox_exporter.container.syslog.enabled %}
+    logging:
+      driver: syslog
+      options:
+        syslog-address: "{{ prometheus.blackbox_exporter.container.syslog.host }}"
+        tag: {{ prometheus.blackbox_exporter.container.syslog.tag }}
+{% endif %}
+{% if prometheus.blackbox_exporter.container.networks %}
+    networks:
+{% for network in prometheus.blackbox_exporter.container.networks|default([]) %}
+      - {{ network.name }}
+{% endfor %}
+{% endif %}
+    ports:
+      - {{ prometheus.blackbox_exporter.host }}:{{ prometheus.blackbox_exporter.port }}:9115
+    restart: always
+    volumes:
+      - ./blackbox.yml:/config/blackbox.yml
+{% endif %}
+
 {% if prometheus.server.enabled|default(False) %}
   prometheus:
     container_name: {{ prometheus.server.container.name }}
@@ -78,7 +158,15 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention={{ prometheus.server.storage_retention }}'
+{% if prometheus.server.container.dns|default(false) %}
     dns: {{ prometheus.server.container.dns }}
+{% endif %}
+{% if prometheus.server.container.labels %}
+    labels:
+{% for label in prometheus.server.container.labels|default([]) %}
+      - {{ label }}
+{% endfor %}
+{% endif %}
 {% if prometheus.server.container.syslog.enabled %}
     logging:
       driver: syslog
@@ -86,9 +174,11 @@ services:
         syslog-address: "{{ prometheus.server.container.syslog.host }}"
         tag: {{ prometheus.server.container.syslog.tag }}
 {% endif %}
-{% if prometheus.network|default(False) %}
+{% if prometheus.server.container.networks %}
     networks:
-      - {{ prometheus.network.name }}
+{% for network in prometheus.server.container.networks %}
+      - {{ network.name }}
+{% endfor %}
 {% endif %}
     ports:
       - {{ prometheus.server.host }}:{{ prometheus.server.port }}:9090
@@ -99,12 +189,20 @@ services:
 
 {% if prometheus.alertmanager.enabled %}
   alertmanager:
-    container_name: {{ prometheus_alertmanager_container.name }}
-    image: {{ prometheus_alertmanager_container.image }}
+    container_name: {{ prometheus.alertmanager.container.name }}
+    image: {{ prometheus.alertmanager.container.image }}
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'
-    dns: {{ prometheus_alertmanager_container.dns }}
+{% if prometheus.alertmanager.container.dns|default(false) %}
+    dns: {{ prometheus.alertmanager.container.dns }}
+{% endif %}
+{% if prometheus.alertmanager.container.labels %}
+    labels:
+{% for label in prometheus.alertmanager.container.labels|default([]) %}
+      - {{ label }}
+{% endfor %}
+{% endif %}
 {% if prometheus.alertmanager.container.syslog.enabled %}
     logging:
       driver: syslog
@@ -112,13 +210,15 @@ services:
         syslog-address: "{{ prometheus.alertmanager.container.syslog.host }}"
         tag: {{ prometheus.alertmanager.container.syslog.tag }}
 {% endif %}
-{% if prometheus.network|default(False) %}
+{% if prometheus.alertmanager.container.networks %}
     networks:
-      - {{ prometheus.network.name }}
+{% for network in prometheus.alertmanager.container.networks %}
+      - {{ network.name }}
+{% endfor %}
 {% endif %}
     ports:
       - {{ prometheus.alertmanager.host }}:{{ prometheus.alertmanager.port }}:9093
-    restart: {{ prometheus.container.restart }}
+    restart: {{ prometheus.alertmanager.container.restart }}
     volumes:
       - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
       - alertmanager_data:/alertmanager

@@ -31,8 +31,18 @@ scrape_configs:
       - server: 'consul.service.consul:8500'
         services: [{% for service in prometheus.server.exporters %}'{{ service }}'{% if not loop.last %}, {% endif %}{% endfor %}]
     relabel_configs:
-      - source_labels: [__meta_consul_service]
+      - source_labels: ['__meta_consul_service']
         target_label: exporter
+      - source_labels: ['__meta_consul_dc']
+        target_label: dc
+      - source_labels: ['__meta_consul_node']
+        regex:         '(.*)'
+        target_label:  'node'
+        replacement:   '$1'
+      - source_labels: ['__meta_consul_service_metadata_tier']
+        regex:         '(.*)'
+        target_label:  'tier'
+        replacement:   '$1'
 {% endif %}
 
 {% if prometheus.server.services %}
@@ -41,4 +51,15 @@ scrape_configs:
     consul_sd_configs:
       - server: 'consul.service.consul:8500'
         services: [{% for service in prometheus.server.services %}'{{ service }}'{% if not loop.last %}, {% endif %}{% endfor %}]
+    relabel_configs:
+      - source_labels: ['__meta_consul_dc']
+        target_label: dc
+      - source_labels: ['__meta_consul_node']
+        regex:         '(.*)'
+        target_label:  'node'
+        replacement:   '$1'
+      - source_labels: ['__meta_consul_service_metadata_tier']
+        regex:         '(.*)'
+        target_label:  'tier'
+        replacement:   '$1'
 {% endif %}

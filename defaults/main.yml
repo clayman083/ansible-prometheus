@@ -4,6 +4,28 @@ prometheus:
   dir: "{{ services_dir }}/prometheus"
   rules_dir: "{{ services_dir }}/prometheus/rules.d"
 
+  blackbox_exporter:
+    enabled: false
+
+    host: "{{ private_network.address }}"
+    port: 9115
+
+    targets:
+      - "http://{{ domain }}"
+
+    container:
+      image: prom/blackbox-exporter:v0.14.0
+      name: blackbox_exporter
+      dns: "{{ private_network.address }}"
+      networks: []
+      labels: []
+      restart: always
+
+      syslog:
+        enabled: false
+        host: unixgram:///dev/log
+        tag: blackbox_exporter
+
   node_exporter:
     host: "{{ private_network.address }}"
     port: 9100
@@ -12,7 +34,8 @@ prometheus:
       image: prom/node-exporter:latest
       name: node_exporter
       dns: "{{ private_network.address }}"
-      network: ""
+      networks: []
+      labels: []
       restart: always
 
       syslog:
@@ -28,7 +51,8 @@ prometheus:
       image: google/cadvisor:latest
       name: cadvisor_exporter
       dns: "{{ private_network.address }}"
-      network: ""
+      networks: []
+      labels: []
       restart: always
 
       syslog:
@@ -48,7 +72,11 @@ prometheus:
 
     storage_retention: 30d
 
-    exporters: []
+    exporters:
+      - blackbox-exporter
+      - cadvisor-exporter
+      - docker-exporter
+      - node-exporter
 
     services: []
 
@@ -59,7 +87,8 @@ prometheus:
       image: prom/prometheus:v2.2.1
       name: prometheus
       dns: "{{ private_network.address }}"
-      network: ""
+      networks: []
+      labels: []
       restart: always
 
       syslog:
@@ -77,7 +106,8 @@ prometheus:
       name: alertmanager
       image: prom/alertmanager:v0.15.1
       dns: "{{ private_network.address }}"
-      network: ""
+      networks: []
+      labels: []
       restart: always
 
       syslog:

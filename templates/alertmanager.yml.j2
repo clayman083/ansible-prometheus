@@ -1,5 +1,15 @@
 ---
 
+{% if prometheus.alertmanager.webhook and prometheus.alertmanager.webhook.enabled|default(False) %}
+route:
+  receiver: {{ prometheus.alertmanager.webhook.receiver }}
+
+receivers:
+  - name: {{ prometheus.alertmanager.webhook.receiver }}
+    webhook_configs:
+      - url: {{ prometheus.alertmanager.webhook.url }}
+{% endif %}
+
 {% if prometheus.alertmanager.slack and prometheus.alertmanager.slack.enabled|default(False) %}
 route:
   receiver: 'slack'

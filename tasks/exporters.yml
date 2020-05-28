@@ -11,3 +11,10 @@
     - src: docker-compose.yml
       dest: "{{ prometheus.dir }}/docker-compose.yml"
   notify: restart prometheus
+
+- name: Assemble Blackbox config
+  template: src={{ item.src }}.j2 dest={{ item.dest }}
+  with_items:
+    - src: blackbox.yml
+      dest: "{{ prometheus.dir }}/blackbox.yml"
+  when: prometheus.blackbox_exporter.enabled|default(False)
